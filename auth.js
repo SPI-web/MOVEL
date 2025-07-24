@@ -24,12 +24,12 @@ function checkAuth() {
             console.log("Acesso permitido.");
           } else {
             // Usuário não aprovado, redireciona
-            window.location.href = "aguardando_aprovacao.html";
+            window.location.href = "index.html";
           }
         })
         .catch(function(error) {
           console.error("Erro ao verificar aprovação: ", error);
-          window.location.href = "erro.html";
+          window.location.href = "index.html";
         });
     } else {
       // Usuário não autenticado, redireciona para login
