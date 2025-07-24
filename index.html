@@ -10,7 +10,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <!-- Arquivo com configuração e funções de autenticação -->
     <script src="auth.js"></script>
   <style>
@@ -20,7 +20,14 @@
       padding: 0;
       box-sizing: border-box;
     }
- 
+    body {
+      /* Background inicial para a tela de login */
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Poppins', sans-serif;
+    }
     /* Container comum para as telas */
     .container {
       border-radius: 12px;
@@ -209,58 +216,38 @@
   </style>
 </head>
 
-<body>
+<body style="background-image: url('https://grupotel-web.github.io/protect-/TBG.jpg'); background-size: cover;">
 
-  <div id="userCre" style="display: block; z-index: 999999999;">
-<!-- Fundo de tela -->
-<div style="
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-image: url('https://grupotel-web.github.io/protect-/TBG.jpg');
-  background-size: cover;
-  background-position: center;
-  z-index: -1;
-"></div>
+ <!-- Tela de Login -->
+<div id="login-container" class="container login-container zoom">
 
-<!-- Conteúdo centralizado -->
-<div style="
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  width: 100vw;
-  position: relative;
-  z-index: 1;
-  flex-direction: column;
-">
 
-  <!-- Tela de Login -->
-  <div id="login-container" class="container login-container zoom">
-    <div class="image">
-      <i class="fas fa-globe floating-icon" style="font-size: 64px; color: #002c4c;"></i>
-    </div>
-    <h2>Bem-vindo</h2>
-    <form id="login-form">
-      <div class="input-group">
-        <label for="login-email">Email</label>
-        <input type="email" id="login-email" placeholder="Digite seu email" required>
-      </div>
-      <div class="input-group">
-        <label for="login-senha">Senha</label>
-        <input type="password" id="login-senha" placeholder="Digite sua senha" required>
-        <div id="error-message" style="color: red; margin-top: 5px; font-size: 10px;"></div>
-      </div>
-      <br>
-      <button type="submit" class="btn">Entrar</button>
-      <div class="additional-links">
-        <a href="#" class="forgot-password" onclick="forgotPassword()">Esqueceu sua senha?</a>
-        <a href="#" class="request-access" onclick="toggleForms(event)">Solicitar acesso</a>
-      </div>
-    </form>
+  <div class="image">
+    <i class="fas fa-globe floating-icon" style="font-size: 64px; color: #002c4c;"></i>
   </div>
+  <h2>Bem-vindo</h2>
+  <form id="login-form">
+    <div class="input-group">
+      <label for="login-email">Email</label>
+      <input type="email" id="login-email" placeholder="Digite seu email" required>
+    </div>
+    <div class="input-group">
+      <label for="login-senha">Senha</label>
+      <input type="password" id="login-senha" placeholder="Digite sua senha" required>
+      <!-- Div para mensagens de erro -->
+      <div id="error-message" style="color: red; margin-top: 5px; font-size: 10px;"></div>
+    </div>
+
+   <br>
+
+    <button type="submit" class="btn">Entrar</button>
+    <div class="additional-links">
+      <a href="#" class="forgot-password" onclick="forgotPassword()">Esqueceu sua senha?</a>
+      <a href="#" class="request-access" onclick="toggleForms(event)">Solicitar acesso</a>
+    </div>
+  </form>    
+</div>
+
 
   <!-- Tela de Cadastro -->
   <div id="signup-container" class="container signup-container" style="display: none;">
@@ -285,184 +272,138 @@
     </form>
   </div>
 
-</div>
-
-</div>
-
   <script>
-// Função chamada quando o link de "Esqueceu sua senha?" é clicado
-function forgotPassword() {
-  const email = prompt("Por favor, insira o seu email para redefinir a senha:");
-
-  // Verifica se o email não está vazio
-  if (email) {
-    firebase.auth().sendPasswordResetEmail(email)
-      .then(function() {
-        alert("Se o email estiver cadastrado, um link para redefinir sua senha foi enviado.");
-      })
-      .catch(function(error) {
-        // Trata os erros
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        if (errorCode === 'auth/invalid-email') {
-          alert("O email fornecido é inválido.");
-        } else if (errorCode === 'auth/user-not-found') {
-          alert("Nenhum usuário encontrado com esse email.");
-        } else {
-          alert("Erro ao enviar o e-mail: " + errorMessage);
-        }
-      });
-  } else {
-    alert("Por favor, insira um email válido.");
-  }
-}
-
-
-
-document.addEventListener("DOMContentLoaded", function () {
-  document.getElementById('login-form').addEventListener('submit', function (e) {
-    e.preventDefault(); // Impede o envio do formulário antes da verificação
-
-    console.log("Formulário submetido.");
-
-    var email = document.getElementById('login-email').value;
-    var senha = document.getElementById('login-senha').value;
-    var recaptchaResponse = grecaptcha.getResponse(); // Obtém a resposta do reCAPTCHA
-
-    console.log("Email digitado:", email);
-    console.log("Tentando autenticar usuário...");
-
-    // Verifica se o reCAPTCHA foi preenchido
-    if (recaptchaResponse.length === 0) {
-      alert("Por favor, complete o CAPTCHA.");
-      console.log("reCAPTCHA não preenchido.");
-      return;
-    } else {
-      console.log("reCAPTCHA preenchido.");
+    // Função para recuperar senha
+    function forgotPassword() {
+      const email = prompt("Por favor, insira o seu email para redefinir a senha:");
+      if (email) {
+        firebase.auth().sendPasswordResetEmail(email)
+          .then(() => alert("Se o email estiver cadastrado, um link foi enviado."))
+          .catch((error) => {
+            if (error.code === 'auth/invalid-email') alert("Email inválido.");
+            else if (error.code === 'auth/user-not-found') alert("Usuário não encontrado.");
+            else alert("Erro ao enviar e-mail: " + error.message);
+          });
+      } else {
+        alert("Por favor, insira um email válido.");
+      }
     }
-
-    // Autenticação no Firebase
-
-    firebase.auth().signInWithEmailAndPassword(email, senha)
-  .then(function (userCredential) {
-    console.log("Login bem-sucedido. Ocultando tela de login...");
-    document.getElementById('userCre').style.display = 'none';
-  })
-  .catch(function (error) {
-    console.error("Erro no login:", error);
-    document.getElementById('error-message').textContent =
-      'Email ou senha incorretos. Por favor, tente novamente.';
-  });
-
-  });
-});
-
-
-
-
-
+   
+    // Alternar entre login e cadastro
     function toggleForms(event) {
-    event.preventDefault();
-    const loginContainer = document.getElementById('login-container');
-    const signupContainer = document.getElementById('signup-container');
-
-    if (loginContainer.style.display !== 'none') {
-        loginContainer.style.display = 'none';
-        signupContainer.style.display = 'block';
+      event.preventDefault();
+      const loginContainer = document.getElementById('login-container');
+      const signupContainer = document.getElementById('signup-container');
+   
+  if (loginContainer.style.display !== 'none') {
+  loginContainer.style.display = 'none';
+  signupContainer.style.display = 'block';
         signupContainer.classList.remove('zoom');
-        void signupContainer.offsetWidth; // Força reflow para reiniciar a animação
+        void signupContainer.offsetWidth;
         signupContainer.classList.add('zoom');
-    } else {
-        signupContainer.style.display = 'none';
-        loginContainer.style.display = 'block';
+      } else {
+  signupContainer.style.display = 'none';
+  loginContainer.style.display = 'block';
         loginContainer.classList.remove('zoom');
         void loginContainer.offsetWidth;
         loginContainer.classList.add('zoom');
+      }
     }
-}
-
-    
-    // Monitoramento do estado de autenticação
+   
+    // Verificação de sessão
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
-        // Se for o primeiro login nesta sessão, armazena a data/hora do login
         if (!localStorage.getItem('loginTime')) {
-          localStorage.setItem('loginTime', Date.now());
+  localStorage.setItem('loginTime', Date.now());
         }
-        // Sinaliza que a aba está ativa (sessionStorage é apagado se a aba for fechada)
         if (!sessionStorage.getItem('activeSession')) {
           sessionStorage.setItem('activeSession', "true");
         }
-        console.log("Usuário autenticado:", user.email);
-        // Aqui você pode redirecionar o usuário para a dashboard, se desejar.
+  console.log("Usuário autenticado:", user.email);
       } else {
-        // Ao deslogar, remove os marcadores de tempo
         localStorage.removeItem('loginTime');
         sessionStorage.removeItem('activeSession');
       }
     });
-    
-    // Função para checar a expiração da sessão
+   
     function checkSessionExpiration() {
       const user = firebase.auth().currentUser;
       if (user) {
         const loginTime = localStorage.getItem('loginTime');
         if (loginTime) {
-          const elapsed = Date.now() - parseInt(loginTime);
+  const elapsed = Date.now() - parseInt(loginTime);
           if (sessionStorage.getItem('activeSession')) {
-            // Se a aba estiver ativa, permite 6 horas (21600000 ms)
-            if (elapsed > 21600000) {
+            if (elapsed > 21600000) { // 6 horas
               firebase.auth().signOut().then(() => {
                 localStorage.removeItem('loginTime');
-                alert("Sua sessão expirou (6 horas). Faça login novamente.");
+                alert("Sessão expirada. Faça login novamente.");
               });
             }
           } else {
-            // Se a aba foi fechada, permite apenas 1 hora (3600000 ms)
-            if (elapsed > 3600000) {
+            if (elapsed > 3600000) { // 1 hora
               firebase.auth().signOut().then(() => {
                 localStorage.removeItem('loginTime');
-                alert("Sua sessão expirou (1 hora após fechamento). Faça login novamente.");
+                alert("Sessão expirada após fechamento da aba.");
               });
             }
           }
         }
       }
     }
-    // Checa a expiração da sessão a cada 60 segundos
-    setInterval(checkSessionExpiration, 60000);
-    
-    // Evento de submit para Login
-    const loginForm = document.getElementById('login-form');
-loginForm.addEventListener('submit', function(e) {
-  e.preventDefault();
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-senha').value;
-  const errorMessageDiv = document.getElementById('error-message');
-
-  firebase.auth().signInWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      // Limpa a mensagem de erro após login bem-sucedido
-      errorMessageDiv.textContent = '';
-    })
-    .catch((error) => {
-      // Define a mensagem de erro no div acima do campo de senha
-      errorMessageDiv.textContent = 'Email ou senha incorretos. Por favor, tente novamente.';
+   
+    setInterval(checkSessionExpiration, 60000); // checa a cada minuto
+   
+    // SUBMIT do login
+    document.getElementById('login-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+   
+      const email = document.getElementById('login-email').value;
+      const senha = document.getElementById('login-senha').value;
+      const errorMessageDiv = document.getElementById('error-message');
+   
+      firebase.auth().signInWithEmailAndPassword(email, senha)
+        .then((userCredential) => {
+          const user = userCredential.user;
+   
+          firebase.database().ref('usuarios/' + user.uid + '/status').once('value')
+            .then((snapshot) => {
+              const status = snapshot.val();
+              const aprovadoCriptografado = btoa('Aprovado'); // QXByb3ZhZG8=
+   
+              if (btoa(status) === aprovadoCriptografado) {
+                window.location.href = "DISPMOVEL.html";
+              } else {
+                firebase.auth().signOut();
+                alert("Acesso negado. Sua conta ainda está aguardando aprovação.");
+              }
+            });
+        })
+        .catch((error) => {
+          console.error("Erro no login:", error);
+          errorMessageDiv.textContent = 'Email ou senha incorretos. Por favor, tente novamente.';
+        });
     });
-});
-
-
-    
-    // Evento de submit para Cadastro
+   
+    // SUBMIT do cadastro
     const signupForm = document.getElementById('signup-form');
     signupForm.addEventListener('submit', function(e) {
       e.preventDefault();
+      const nome = document.getElementById('nome').value;
       const email = document.getElementById('signup-email').value;
       const password = document.getElementById('signup-senha').value;
-      
+   
       firebase.auth().createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
-          alert("Cadastro realizado com sucesso!");
+          const user = userCredential.user;
+   
+          firebase.database().ref('usuarios/' + user.uid).set({
+            nome: nome,
+            email: email,
+            status: "pendente"
+          }).then(() => {
+            alert("Cadastro enviado com sucesso! Aguarde aprovação.");
+            toggleForms(e);
+          });
         })
         .catch((error) => {
           alert("Erro no cadastro: " + error.message);
